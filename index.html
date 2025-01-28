@@ -77,6 +77,14 @@
             font-size: 1.1em;
             margin-bottom: 5px;
         }
+
+        /* ข้อความเตือนเมื่อไม่พบข้อมูล */
+        .no-results {
+            text-align: center;
+            color: #f5c518;
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -84,12 +92,17 @@
 
     <!-- ช่องค้นหาข้อมูล -->
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="ค้นหาจาก PEA..." onkeyup="searchData()">
+        <input type="text" id="searchInput" placeholder="ค้นหาจาก PEA..." onkeypress="checkEnter(event)">
     </div>
 
     <!-- Flex carousel ที่จะแสดงข้อมูล -->
     <div id="carousel" class="carousel">
         <!-- Flex carousel items will be appended here -->
+    </div>
+
+    <!-- ข้อความเตือนหากไม่พบข้อมูล -->
+    <div id="noResults" class="no-results" style="display:none;">
+        ไม่พบข้อมูลที่ค้นหา
     </div>
 
     <script>
@@ -103,7 +116,6 @@
             .then(response => response.json())  // แปลงข้อมูลเป็น JSON
             .then(data => {
                 sheetData = data;  // เก็บข้อมูลทั้งหมดไว้ในตัวแปร sheetData
-                displayData(sheetData);  // แสดงข้อมูลทั้งหมด
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -113,33 +125,54 @@
         // ฟังก์ชันสำหรับแสดงข้อมูลใน flex carousel
         function displayData(data) {
             const carouselContainer = document.getElementById('carousel');
+            const noResultsDiv = document.getElementById('noResults');
             carouselContainer.innerHTML = ''; // ล้างข้อมูลเก่าออกก่อน
 
-            data.forEach(item => {
-                const carouselItem = document.createElement('div');
-                carouselItem.classList.add('carousel-item');
+            // หากไม่พบข้อมูลแสดงข้อความเตือน
+            if (data.length === 0) {
+                noResultsDiv.style.display = 'block';
+            } else {
+                noResultsDiv.style.display = 'none';
+                data.forEach(item => {
+                    const carouselItem = document.createElement('div');
+                    carouselItem.classList.add('carousel-item');
 
-                // แสดงข้อมูลจากแต่ละแถวใน Google Sheets
-                carouselItem.innerHTML = `
-                    <h3>${item.pea}</h3>
-                    <p>รายได้: ${item.income}</p>
-                    <p>ต้นทุนงาน: ${item.cost}</p>
-                    <p>กำไร/ขาดทุน: ${item.profit}</p>
-                    <p>อัตราส่วน: ${item.ratio}</p>
-                `;
+                    // แสดงข้อมูลจากแต่ละแถวใน Google Sheets
+                    carouselItem.innerHTML = `
+                        <h3>${item.pea}</h3>
+                        <p>รายได้: ${parseFloat(item.income).toFixed(2)}</p>
+                        <p>ต้นทุนงาน: ${parseFloat(item.cost).toFixed(2)}</p>
+                        <p>กำไร/ขาดทุน: ${parseFloat(item.profit).toFixed(2)}</p>
+                        <p>อัตราส่วน: ${parseFloat(item.ratio).toFixed(2)}</p>
+                    `;
 
-                carouselContainer.appendChild(carouselItem);
-            });
+                    carouselContainer.appendChild(carouselItem);
+                });
+            }
+        }
+
+        // ฟังก์ชันตรวจสอบเมื่อกด Enter
+        function checkEnter(event) {
+            if (event.key === 'Enter') {
+                searchData();
+            }
         }
 
         // ฟังก์ชันค้นหาข้อมูลเมื่อผู้ใช้พิมพ์
         function searchData() {
             const searchInput = document.getElementById('searchInput').value.toLowerCase();
             
-            // กรองข้อมูลจาก PEA ที่ตรงกับคำค้น
-            const filteredData = sheetData.filter(item => 
-                item.pea.toLowerCase().includes(searchInput)
-            );
+            let filteredData = [];
+
+            // ถ้าค้นหาด้วยคำว่า "ทั้งหมด"
+            if (searchInput === 'ทั้งหมด') {
+                filteredData = sheetData;
+            } else {
+                // กรองข้อมูลจาก PEA ที่ตรงกับคำค้น
+                filteredData = sheetData.filter(item => 
+                    item.pea.toLowerCase().includes(searchInput)
+                );
+            }
 
             // แสดงข้อมูลที่กรองแล้ว
             displayData(filteredData);
