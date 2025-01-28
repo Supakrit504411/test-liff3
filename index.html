@@ -3,64 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Sheets Data</title>
+    <title>Google Sheets Data with Search</title>
     <style>
-        /* Style flex carousel */
-        .carousel {
-            display: flex;
-            overflow-x: scroll;
-            padding: 20px;
-            gap: 10px;
+        /* ปรับสีพื้นหลังของหน้าเว็บ */
+        body {
+            background-color: #2c1f57; /* ม่วงเข้ม */
+            font-family: Arial, sans-serif;
+            color: #f5c518; /* ทอง */
+            margin: 0;
+            padding: 0;
         }
 
-        .carousel-item {
-            min-width: 200px;
-            border: 1px solid #ddd;
+        /* สไตล์สำหรับหัวข้อ */
+        h1 {
+            text-align: center;
+            color: #f5c518; /* ทอง */
+            padding: 20px;
+            font-size: 2.5em;
+        }
+
+        /* ช่องค้นหา */
+        .search-box {
+            margin: 20px;
+            text-align: center;
+        }
+
+        .search-box input {
             padding: 10px;
+            font-size: 1.2em;
             border-radius: 5px;
+            border: 2px solid #f5c518; /* ทอง */
+            background-color: #3a2a6f; /* ม่วงอ่อน */
+            color: #f5c518; /* ทอง */
+            width: 50%;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #ffffff; /* ขาว */
+        }
+
+        /* Flex Carousel */
+        .carousel {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+            margin: 0 auto;
+        }
+
+        /* สไตล์สำหรับแต่ละ Item ใน Carousel */
+        .carousel-item {
+            background-color: #3a2a6f; /* ม่วงอ่อน */
+            color: #f5c518; /* ทอง */
+            border-radius: 10px;
+            padding: 20px;
+            width: 250px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .carousel-item:hover {
+            transform: scale(1.05);
+        }
+
+        .carousel-item h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .carousel-item p {
+            font-size: 1.1em;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <h1>Google Sheets Data</h1>
+    <h1>ข้อมูลจาก Google Sheets</h1>
+
+    <!-- ช่องค้นหาข้อมูล -->
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="ค้นหาจาก PEA..." onkeyup="searchData()">
+    </div>
+
+    <!-- Flex carousel ที่จะแสดงข้อมูล -->
     <div id="carousel" class="carousel">
         <!-- Flex carousel items will be appended here -->
     </div>
 
     <script>
-        // URL ของ Web App ที่เราได้จาก Google Apps Script
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbxlaaf8OoWyn9VXPjAhZq5jKUYmIJR791bkaRR7hA8p94S-R2CnqPDj95Gz5rsKjZC0/exec'; 
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbxlaaf8OoWyn9VXPjAhZq5jKUYmIJR791bkaRR7hA8p94S-R2CnqPDj95Gz5rsKjZC0/exec'; // URL ของ Web App ที่ได้จาก Google Apps Script
+
+        // ตัวแปรเก็บข้อมูลจาก Google Sheets
+        let sheetData = [];
 
         // ดึงข้อมูลจาก Web App
         fetch(webAppUrl)
             .then(response => response.json())  // แปลงข้อมูลเป็น JSON
             .then(data => {
-                // ตรวจสอบข้อมูลที่ได้รับ
-                console.log(data);
-
-                const carouselContainer = document.getElementById('carousel');
-                
-                // แสดงข้อมูลในรูปแบบ Flex carousel
-                data.forEach(item => {
-                    const carouselItem = document.createElement('div');
-                    carouselItem.classList.add('carousel-item');
-
-                    // แสดงข้อมูลจากแต่ละแถวใน Google Sheets
-                    carouselItem.innerHTML = `
-                        <h3>${item.pea}</h3>
-                        <p>รายได้: ${item.income}</p>
-                        <p>ต้นทุนงาน: ${item.cost}</p>
-                        <p>กำไร/ขาดทุน: ${item.profit}</p>
-                        <p>อัตราส่วน: ${item.ratio}</p>
-                    `;
-
-                    carouselContainer.appendChild(carouselItem);
-                });
+                sheetData = data;  // เก็บข้อมูลทั้งหมดไว้ในตัวแปร sheetData
+                displayData(sheetData);  // แสดงข้อมูลทั้งหมด
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('ไม่สามารถดึงข้อมูลได้');
             });
+
+        // ฟังก์ชันสำหรับแสดงข้อมูลใน flex carousel
+        function displayData(data) {
+            const carouselContainer = document.getElementById('carousel');
+            carouselContainer.innerHTML = ''; // ล้างข้อมูลเก่าออกก่อน
+
+            data.forEach(item => {
+                const carouselItem = document.createElement('div');
+                carouselItem.classList.add('carousel-item');
+
+                // แสดงข้อมูลจากแต่ละแถวใน Google Sheets
+                carouselItem.innerHTML = `
+                    <h3>${item.pea}</h3>
+                    <p>รายได้: ${item.income}</p>
+                    <p>ต้นทุนงาน: ${item.cost}</p>
+                    <p>กำไร/ขาดทุน: ${item.profit}</p>
+                    <p>อัตราส่วน: ${item.ratio}</p>
+                `;
+
+                carouselContainer.appendChild(carouselItem);
+            });
+        }
+
+        // ฟังก์ชันค้นหาข้อมูลเมื่อผู้ใช้พิมพ์
+        function searchData() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            
+            // กรองข้อมูลจาก PEA ที่ตรงกับคำค้น
+            const filteredData = sheetData.filter(item => 
+                item.pea.toLowerCase().includes(searchInput)
+            );
+
+            // แสดงข้อมูลที่กรองแล้ว
+            displayData(filteredData);
+        }
     </script>
 </body>
 </html>
