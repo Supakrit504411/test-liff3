@@ -91,6 +91,30 @@
             width: 80%;
             margin: 0 auto;
             padding: 40px;
+            position: relative;
+        }
+
+        /* เอฟเฟ็กต์แสงแฟร์ */
+        .flair {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 20%, rgba(0, 0, 0, 0) 80%);
+            animation: flare 2s infinite ease-in-out;
+        }
+
+        @keyframes flare {
+            0% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.5;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -115,6 +139,8 @@
 
     <!-- กราฟแท่ง -->
     <div id="chartContainer">
+        <!-- แสงแฟร์เบาๆ วิ่งไปมา -->
+        <div class="flair"></div>
         <canvas id="myChart"></canvas>
     </div>
 
@@ -155,7 +181,7 @@
                         <p>รายได้: ${parseFloat(item.income).toFixed(2)}</p>
                         <p>ต้นทุนงาน: ${parseFloat(item.cost).toFixed(2)}</p>
                         <p>กำไร/ขาดทุน: ${parseFloat(item.profit).toFixed(2)}</p>
-                        <p>อัตราส่วน: ${parseFloat(item.ratio).toFixed(2)}</p>
+                        <p>ร้อยละ: ${parseFloat(item.ratio).toFixed(2)}</p>
                     `;
 
                     carouselContainer.appendChild(carouselItem);
@@ -169,7 +195,7 @@
             const ratios = data.map(item => {
                 let ratio = parseFloat(item.ratio);
                 return isNaN(ratio) ? 0 : ratio; // ตรวจสอบว่า ratio เป็นตัวเลขหรือไม่
-            }); // ใช้ อัตราส่วน เป็นข้อมูลกราฟ
+            }); // ใช้ ร้อยละ เป็นข้อมูลกราฟ
 
             if (labels.length === 0 || ratios.length === 0) {
                 return; // ถ้าไม่มีข้อมูล ไม่ต้องแสดงกราฟ
@@ -188,7 +214,7 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'อัตราส่วน',
+                        label: 'ร้อยละ',
                         data: ratios,
                         backgroundColor: '#f5c518', // สีทอง
                         borderColor: '#2c1f57', // สีม่วงเข้ม
@@ -198,11 +224,21 @@
                 options: {
                     responsive: true,
                     scales: {
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 18 // ขนาดตัวอักษรในแกน X
+                                }
+                            }
+                        },
                         y: {
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
                                     return value.toFixed(2); // แสดงทศนิยมไม่เกิน 2 ตำแหน่ง
+                                },
+                                font: {
+                                    size: 18 // ขนาดตัวอักษรในแกน Y
                                 }
                             }
                         }
@@ -220,21 +256,4 @@
 
         // ฟังก์ชันค้นหาข้อมูลเมื่อผู้ใช้พิมพ์
         function searchData() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            
-            let filteredData = [];
-
-            if (searchInput === 'ทั้งหมด') {
-                filteredData = sheetData;
-            } else {
-                filteredData = sheetData.filter(item => 
-                    item.pea.toLowerCase().includes(searchInput)
-                );
-            }
-
-            displayData(filteredData);
-            displayChart(filteredData); // อัพเดทกราฟด้วยข้อมูลที่กรอง
-        }
-    </script>
-</body>
-</html>
+            const searchInput = document.getElementById('searchInput').value.toLower
