@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Sheets Data with Search</title>
+    <title>Google Sheets Data with Graph</title>
     <style>
         /* ปรับสีพื้นหลังของหน้าเว็บ */
         body {
@@ -85,10 +85,18 @@
             font-size: 1.5em;
             margin-top: 20px;
         }
+
+        /* สไตล์สำหรับกราฟ */
+        #chartContainer {
+            width: 80%;
+            margin: 0 auto;
+            padding: 40px;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>รายงานผลกำไร-ขาดทุนงานก่อสร้าง C02.2</h1>
+    <h1>ข้อมูลจาก Google Sheets</h1>
 
     <!-- ช่องค้นหาข้อมูล -->
     <div class="search-box">
@@ -105,10 +113,14 @@
         ไม่พบข้อมูลที่ค้นหา
     </div>
 
+    <!-- กราฟแท่ง -->
+    <div id="chartContainer">
+        <canvas id="myChart"></canvas>
+    </div>
+
     <script>
         const webAppUrl = 'https://script.google.com/macros/s/AKfycbxlaaf8OoWyn9VXPjAhZq5jKUYmIJR791bkaRR7hA8p94S-R2CnqPDj95Gz5rsKjZC0/exec'; // URL ของ Web App ที่ได้จาก Google Apps Script
 
-        // ตัวแปรเก็บข้อมูลจาก Google Sheets
         let sheetData = [];
 
         // ดึงข้อมูลจาก Web App
@@ -116,6 +128,8 @@
             .then(response => response.json())  // แปลงข้อมูลเป็น JSON
             .then(data => {
                 sheetData = data;  // เก็บข้อมูลทั้งหมดไว้ในตัวแปร sheetData
+                displayData(sheetData);  // แสดงข้อมูลทั้งหมด
+                displayChart(sheetData);  // แสดงกราฟแท่ง
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -128,7 +142,6 @@
             const noResultsDiv = document.getElementById('noResults');
             carouselContainer.innerHTML = ''; // ล้างข้อมูลเก่าออกก่อน
 
-            // หากไม่พบข้อมูลแสดงข้อความเตือน
             if (data.length === 0) {
                 noResultsDiv.style.display = 'block';
             } else {
@@ -137,7 +150,6 @@
                     const carouselItem = document.createElement('div');
                     carouselItem.classList.add('carousel-item');
 
-                    // แสดงข้อมูลจากแต่ละแถวใน Google Sheets
                     carouselItem.innerHTML = `
                         <h3>${item.pea}</h3>
                         <p>รายได้: ${parseFloat(item.income).toFixed(2)}</p>
@@ -149,6 +161,35 @@
                     carouselContainer.appendChild(carouselItem);
                 });
             }
+        }
+
+        // ฟังก์ชันสำหรับแสดงกราฟแท่ง
+        function displayChart(data) {
+            const labels = data.map(item => item.pea); // ใช้ PEA เป็น labels
+            const ratios = data.map(item => parseFloat(item.ratio)); // ใช้ อัตราส่วน เป็นข้อมูลกราฟ
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'อัตราส่วน',
+                        data: ratios,
+                        backgroundColor: '#f5c518', // สีทอง
+                        borderColor: '#2c1f57', // สีม่วงเข้ม
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
         }
 
         // ฟังก์ชันตรวจสอบเมื่อกด Enter
@@ -164,18 +205,16 @@
             
             let filteredData = [];
 
-            // ถ้าค้นหาด้วยคำว่า "ทั้งหมด"
             if (searchInput === 'ทั้งหมด') {
                 filteredData = sheetData;
             } else {
-                // กรองข้อมูลจาก PEA ที่ตรงกับคำค้น
                 filteredData = sheetData.filter(item => 
                     item.pea.toLowerCase().includes(searchInput)
                 );
             }
 
-            // แสดงข้อมูลที่กรองแล้ว
             displayData(filteredData);
+            displayChart(filteredData); // อัพเดทกราฟด้วยข้อมูลที่กรอง
         }
     </script>
 </body>
