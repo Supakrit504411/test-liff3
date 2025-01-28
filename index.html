@@ -5,24 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Sheets Data with Graph</title>
     <style>
-        /* ปรับสีพื้นหลังของหน้าเว็บ */
         body {
-            background-color: #2c1f57; /* ม่วงเข้ม */
+            background-color: #2c1f57;
             font-family: Arial, sans-serif;
-            color: #f5c518; /* ทอง */
+            color: #f5c518;
             margin: 0;
             padding: 0;
         }
 
-        /* สไตล์สำหรับหัวข้อ */
         h1 {
             text-align: center;
-            color: #f5c518; /* ทอง */
+            color: #f5c518;
             padding: 20px;
             font-size: 2.5em;
         }
 
-        /* ช่องค้นหา */
         .search-box {
             margin: 20px;
             text-align: center;
@@ -32,18 +29,17 @@
             padding: 10px;
             font-size: 1.2em;
             border-radius: 5px;
-            border: 2px solid #f5c518; /* ทอง */
-            background-color: #3a2a6f; /* ม่วงอ่อน */
-            color: #f5c518; /* ทอง */
+            border: 2px solid #f5c518;
+            background-color: #3a2a6f;
+            color: #f5c518;
             width: 50%;
         }
 
         .search-box input:focus {
             outline: none;
-            border-color: #ffffff; /* ขาว */
+            border-color: #ffffff;
         }
 
-        /* Flex Carousel */
         .carousel {
             display: flex;
             flex-wrap: wrap;
@@ -53,32 +49,15 @@
             margin: 0 auto;
         }
 
-        /* สไตล์สำหรับแต่ละ Item ใน Carousel */
         .carousel-item {
-            background-color: #3a2a6f; /* ม่วงอ่อน */
-            color: #f5c518; /* ทอง */
+            background-color: #3a2a6f;
+            color: #f5c518;
             border-radius: 10px;
             padding: 20px;
             width: 250px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease;
         }
 
-        .carousel-item:hover {
-            transform: scale(1.05);
-        }
-
-        .carousel-item h3 {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-        }
-
-        .carousel-item p {
-            font-size: 1.1em;
-            margin-bottom: 5px;
-        }
-
-        /* ข้อความเตือนเมื่อไม่พบข้อมูล */
         .no-results {
             text-align: center;
             color: #f5c518;
@@ -86,7 +65,6 @@
             margin-top: 20px;
         }
 
-        /* สไตล์สำหรับกราฟ */
         #chartContainer {
             width: 80%;
             margin: 0 auto;
@@ -94,7 +72,6 @@
             position: relative;
         }
 
-        /* เอฟเฟ็กต์แสงแฟร์ */
         .flair {
             position: absolute;
             top: 0;
@@ -106,40 +83,21 @@
         }
 
         @keyframes flare {
-            0% {
-                opacity: 0.5;
-            }
-            50% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0.5;
-            }
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <h1>ผลกำไร-ขาดทุน งาน C02.2</h1>
-
-    <!-- ช่องค้นหาข้อมูล -->
     <div class="search-box">
         <input type="text" id="searchInput" placeholder="ค้นหาจาก PEA..." onkeypress="checkEnter(event)">
     </div>
-
-    <!-- Flex carousel ที่จะแสดงข้อมูล -->
-    <div id="carousel" class="carousel">
-        <!-- Flex carousel items will be appended here -->
-    </div>
-
-    <!-- ข้อความเตือนหากไม่พบข้อมูล -->
-    <div id="noResults" class="no-results" style="display:none;">
-        ไม่พบข้อมูลที่ค้นหา
-    </div>
-
-    <!-- กราฟแท่ง -->
+    <div id="carousel" class="carousel"></div>
+    <div id="noResults" class="no-results" style="display:none;">ไม่พบข้อมูลที่ค้นหา</div>
     <div id="chartContainer">
-        <!-- แสงแฟร์เบาๆ วิ่งไปมา -->
         <div class="flair"></div>
         <canvas id="myChart"></canvas>
     </div>
@@ -153,9 +111,14 @@
         fetch(webAppUrl)
             .then(response => response.json())  // แปลงข้อมูลเป็น JSON
             .then(data => {
-                sheetData = data;  // เก็บข้อมูลทั้งหมดไว้ในตัวแปร sheetData
-                displayData(sheetData);  // แสดงข้อมูลทั้งหมด
-                displayChart(sheetData);  // แสดงกราฟแท่ง
+                if (data && data.length > 0) {
+                    sheetData = data;  // เก็บข้อมูลทั้งหมดไว้ในตัวแปร sheetData
+                    displayData(sheetData);  // แสดงข้อมูลทั้งหมด
+                    displayChart(sheetData);  // แสดงกราฟแท่ง
+                } else {
+                    console.error('No data received from Web App.');
+                    document.getElementById('noResults').style.display = 'block';
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -191,15 +154,8 @@
 
         // ฟังก์ชันสำหรับแสดงกราฟแท่ง
         function displayChart(data) {
-            const labels = data.map(item => item.pea); // ใช้ PEA เป็น labels
-            const ratios = data.map(item => {
-                let ratio = parseFloat(item.ratio);
-                return isNaN(ratio) ? 0 : ratio; // ตรวจสอบว่า ratio เป็นตัวเลขหรือไม่
-            }); // ใช้ ร้อยละ เป็นข้อมูลกราฟ
-
-            if (labels.length === 0 || ratios.length === 0) {
-                return; // ถ้าไม่มีข้อมูล ไม่ต้องแสดงกราฟ
-            }
+            const labels = data.map(item => item.pea);
+            const ratios = data.map(item => parseFloat(item.ratio));
 
             const ctx = document.getElementById('myChart').getContext('2d');
 
@@ -216,8 +172,8 @@
                     datasets: [{
                         label: 'ร้อยละ',
                         data: ratios,
-                        backgroundColor: '#f5c518', // สีทอง
-                        borderColor: '#2c1f57', // สีม่วงเข้ม
+                        backgroundColor: '#f5c518',
+                        borderColor: '#2c1f57',
                         borderWidth: 1
                     }]
                 },
@@ -227,7 +183,7 @@
                         x: {
                             ticks: {
                                 font: {
-                                    size: 18 // ขนาดตัวอักษรในแกน X
+                                    size: 18
                                 }
                             }
                         },
@@ -238,7 +194,7 @@
                                     return value.toFixed(2); // แสดงทศนิยมไม่เกิน 2 ตำแหน่ง
                                 },
                                 font: {
-                                    size: 18 // ขนาดตัวอักษรในแกน Y
+                                    size: 18
                                 }
                             }
                         }
@@ -247,13 +203,26 @@
             });
         }
 
-        // ฟังก์ชันตรวจสอบเมื่อกด Enter
         function checkEnter(event) {
             if (event.key === 'Enter') {
                 searchData();
             }
         }
 
-        // ฟังก์ชันค้นหาข้อมูลเมื่อผู้ใช้พิมพ์
         function searchData() {
-            const searchInput = document.getElementById('searchInput').value.toLower
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+
+            let filteredData = [];
+
+            if (searchInput === 'ทั้งหมด') {
+                filteredData = sheetData;
+            } else {
+                filteredData = sheetData.filter(item => item.pea.toLowerCase().includes(searchInput));
+            }
+
+            displayData(filteredData);
+            displayChart(filteredData); // อัพเดทกราฟด้วยข้อมูลที่กรอง
+        }
+    </script>
+</body>
+</html>
