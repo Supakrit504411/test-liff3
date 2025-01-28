@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets Data</title>
+    <style>
+        /* Style flex carousel */
+        .carousel {
+            display: flex;
+            overflow-x: scroll;
+            padding: 20px;
+            gap: 10px;
+        }
+
+        .carousel-item {
+            min-width: 200px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Google Sheets Data</h1>
+    <div id="carousel" class="carousel">
+        <!-- Flex carousel items will be appended here -->
+    </div>
+
+    <script>
+        // URL ของ Web App ที่เราได้จาก Google Apps Script
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbxlaaf8OoWyn9VXPjAhZq5jKUYmIJR791bkaRR7hA8p94S-R2CnqPDj95Gz5rsKjZC0/exec'; 
+
+        // ดึงข้อมูลจาก Web App
+        fetch(webAppUrl)
+            .then(response => response.json())  // แปลงข้อมูลเป็น JSON
+            .then(data => {
+                // ตรวจสอบข้อมูลที่ได้รับ
+                console.log(data);
+
+                const carouselContainer = document.getElementById('carousel');
+                
+                // แสดงข้อมูลในรูปแบบ Flex carousel
+                data.forEach(item => {
+                    const carouselItem = document.createElement('div');
+                    carouselItem.classList.add('carousel-item');
+
+                    // แสดงข้อมูลจากแต่ละแถวใน Google Sheets
+                    carouselItem.innerHTML = `
+                        <h3>${item.pea}</h3>
+                        <p>รายได้: ${item.income}</p>
+                        <p>ต้นทุนงาน: ${item.cost}</p>
+                        <p>กำไร/ขาดทุน: ${item.profit}</p>
+                        <p>อัตราส่วน: ${item.ratio}</p>
+                    `;
+
+                    carouselContainer.appendChild(carouselItem);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('ไม่สามารถดึงข้อมูลได้');
+            });
+    </script>
+</body>
+</html>
